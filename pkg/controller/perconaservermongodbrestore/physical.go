@@ -180,7 +180,7 @@ func (r *ReconcilePerconaServerMongoDBRestore) reconcilePhysicalRestore(ctx cont
 		stderrBuf.Reset()
 
 		command := []string{
-			"/opt/percona/pbm", "describe-restore", cr.Status.PBMname,
+			"/opt/percona/pbm", "describe-restore", cr.Spec.BackupSource.PBMname, // cr.Status.PBMname
 			"--config", "/etc/pbm/pbm_config.yaml",
 			"--out", "json",
 		}
@@ -196,7 +196,6 @@ func (r *ReconcilePerconaServerMongoDBRestore) reconcilePhysicalRestore(ctx cont
 		return status, err
 	}
 
-	
 	if err := json.Unmarshal(stdoutBuf.Bytes(), &meta); err != nil {
 		return status, errors.Wrap(err, "unmarshal PBM describe-restore output")
 	}
