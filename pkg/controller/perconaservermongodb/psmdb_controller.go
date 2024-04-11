@@ -486,6 +486,8 @@ func (r *ReconcilePerconaServerMongoDB) Reconcile(ctx context.Context, request r
 
 		clusterStatus, err = r.reconcileCluster(ctx, cr, replset, mongosPods.Items)
 		if err != nil {
+			// todo need to watch and fix
+			log.Info("[SPEC] reconcile cluster error", "-", "-", "replset", replset.Name, "error", err)
 			log.Error(err, "failed to reconcile cluster", "replset", replset.Name)
 		}
 
@@ -504,6 +506,7 @@ func (r *ReconcilePerconaServerMongoDB) Reconcile(ctx context.Context, request r
 		return reconcile.Result{}, errors.Wrap(err, "reconcile mongos")
 	}
 
+	// todo If the restoration is not successful, the related CRD will be deleted, and the process will terminate here
 	if err := r.enableBalancerIfNeeded(ctx, cr); err != nil {
 		return reconcile.Result{}, errors.Wrap(err, "failed to start balancer")
 	}

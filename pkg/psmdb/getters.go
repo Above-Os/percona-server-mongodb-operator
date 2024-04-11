@@ -106,7 +106,7 @@ func filterPodsByComponent(list corev1.PodList, component string) []corev1.Pod {
 func GetPrimaryPod(ctx context.Context, client *mgo.Client) (string, error) {
 	status, err := mongo.RSStatus(ctx, client)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get rs status")
+		return "", errors.Wrap(err, "failed to get rs status in get primary pod")
 	}
 
 	return status.Primary().Name, nil

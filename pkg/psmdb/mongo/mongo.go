@@ -259,23 +259,41 @@ func WriteConfig(ctx context.Context, client *mongo.Client, cfg RSConfig) error 
 	return nil
 }
 
+// todo This code needs to be run and observed for a while
 func RSStatus(ctx context.Context, client *mongo.Client) (Status, error) {
-	status := Status{}
+	log := logf.FromContext(ctx)
 
-	resp := client.Database("admin").RunCommand(ctx, bson.D{{Key: "replSetGetStatus", Value: 1}})
-	if resp.Err() != nil {
-		return status, errors.Wrap(resp.Err(), "replSetGetStatus")
+	var f = func() (Status, error) {
+		status := Status{}
+		resp := client.Database("admin").RunCommand(ctx, bson.D{{Key: "replSetGetStatus", Value: 1}})
+		if resp.Err() != nil {
+			return status, errors.Wrap(resp.Err(), "replSetGetStatus")
+		}
+
+		if err := resp.Decode(&status); err != nil {
+			return status, errors.Wrap(err, "failed to decode rs status")
+		}
+
+		if status.OK != 1 {
+			return status, errors.Errorf("mongo says: %s", status.Errmsg)
+		}
+
+		return status, nil
 	}
 
-	if err := resp.Decode(&status); err != nil {
-		return status, errors.Wrap(err, "failed to decode rs status")
+	var result Status
+	var err error
+	var t = 0
+	for t = 0; t < 5; t++ {
+		result, err = f()
+		if err == nil {
+			return result, nil
+		}
+		log.Info("[RSStatus] get rs status error", "timer", t, "error", err.Error())
+		time.Sleep(2 * time.Second)
 	}
 
-	if status.OK != 1 {
-		return status, errors.Errorf("mongo says: %s", status.Errmsg)
-	}
-
-	return status, nil
+	return result, err
 }
 
 func StartBalancer(ctx context.Context, client *mongo.Client) error {

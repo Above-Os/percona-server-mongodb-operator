@@ -121,7 +121,7 @@ func (r *ReconcilePerconaServerMongoDB) reconcileCluster(ctx context.Context, cr
 	if cr.Spec.Unmanaged {
 		status, err := mongo.RSStatus(ctx, cli)
 		if err != nil {
-			return api.AppStateError, errors.Wrap(err, "failed to get rs status")
+			return api.AppStateError, errors.Wrap(err, "failed to get rs status in reconcile cluster")
 		}
 		if status.Primary() == nil {
 			return api.AppStateInit, nil

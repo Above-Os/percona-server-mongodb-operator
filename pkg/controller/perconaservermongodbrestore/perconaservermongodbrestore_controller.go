@@ -142,10 +142,16 @@ func (r *ReconcilePerconaServerMongoDBRestore) Reconcile(ctx context.Context, re
 		return reconcile.Result{}, nil
 	}
 
+	if cr.Spec.BackupSource == nil {
+		return rr, errors.New("no backup source")
+	}
+
 	bcp, err := r.getBackup(ctx, cr)
 	if err != nil {
 		return rr, errors.Wrap(err, "get backup")
 	}
+
+	log.Info("reconcile", "pbmname", cr.Spec.BackupSource.PBMname, "restore-state", cr.Status.State, "backup-state", bcp.Status.State)
 
 	if bcp.Status.State != psmdbv1.BackupStateReady {
 		return reconcile.Result{}, errors.New("backup is not ready")
@@ -199,8 +205,8 @@ func (r *ReconcilePerconaServerMongoDBRestore) getBackup(ctx context.Context, cr
 
 		return &psmdbv1.PerconaServerMongoDBBackup{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        cr.Name,
-				Namespace:   cr.Namespace,
+				Name:      cr.Name,
+				Namespace: cr.Namespace,
 			},
 			Spec: psmdbv1.PerconaServerMongoDBBackupSpec{
 				ClusterName: cr.Spec.ClusterName,
