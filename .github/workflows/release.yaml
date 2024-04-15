@@ -37,5 +37,5 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: aboveos/percona-server-mongodb-operator:1.14.0-ext
+        tags: beclab/percona-server-mongodb-operator:1.14.0
         file: build/Dockerfile
