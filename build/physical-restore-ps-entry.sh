@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 set -o xtrace
 
-/opt/percona/pbm-agent &
+/opt/percona/pbm-agent-restore &
 
 /opt/percona/ps-entry.sh "$@"
 
