@@ -153,7 +153,7 @@ func (r *ReconcilePerconaServerMongoDBRestore) reconcilePhysicalRestore(ctx cont
 			}
 		}
 
-		command = []string{"/opt/percona/pbm", "restore-ext", bcp.Status.PBMname, "--out", "json"}
+		command = []string{"/opt/percona/pbm", "restore", bcp.Status.PBMname, "--out", "json"}
 
 		// + restore start
 		log.Info("[RESTORE] Starting restore - start", "-", "-", "command", command, "backup-pbmname", cr.Spec.BackupSource.PBMname, "backup-pbmname", bcp.Status.PBMname)
