@@ -91,6 +91,7 @@ type ReconcilePerconaServerMongoDBBackup struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcilePerconaServerMongoDBBackup) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
+	time.Sleep(time.Second)
 	log := logf.FromContext(ctx)
 
 	rr := reconcile.Result{
@@ -183,7 +184,7 @@ func (r *ReconcilePerconaServerMongoDBBackup) Reconcile(ctx context.Context, req
 		return rr, nil
 	}
 
-	status, err = r.reconcile(ctx, cluster, cr, bcp)
+	status, err = r.reconcile(ctx, cluster, cr, bcp, request.NamespacedName)
 	if err != nil {
 		return rr, errors.Wrap(err, "reconcile backup")
 	}
@@ -197,6 +198,7 @@ func (r *ReconcilePerconaServerMongoDBBackup) reconcile(
 	cluster *psmdbv1.PerconaServerMongoDB,
 	cr *psmdbv1.PerconaServerMongoDBBackup,
 	bcp *Backup,
+	namespacedName types.NamespacedName,
 ) (psmdbv1.PerconaServerMongoDBBackupStatus, error) {
 	log := logf.FromContext(ctx)
 	status := cr.Status
@@ -223,7 +225,19 @@ func (r *ReconcilePerconaServerMongoDBBackup) reconcile(
 
 	if cr.Status.State == psmdbv1.BackupStateNew || cr.Status.State == psmdbv1.BackupStateWaiting {
 		time.Sleep(10 * time.Second)
-		return bcp.Start(ctx, r.client, cluster, cr)
+
+		crx := &psmdbv1.PerconaServerMongoDBBackup{}
+		err := r.client.Get(ctx, namespacedName, crx)
+		if crx != nil {
+			log.Info("[BACKUP] prepared for send backup command", "backup", cr.Name,
+				"state", cr.Status.State,
+				"cstate", crx.Status.State,
+				"pbmName", cr.Status.PBMname,
+			)
+		}
+		if err == nil && crx != nil && cr.Status.State == "" && crx.Status.State == "" {
+			return bcp.Start(ctx, r.client, cluster, cr)
+		}
 	}
 
 	time.Sleep(5 * time.Second)

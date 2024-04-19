@@ -328,7 +328,7 @@ func (r *ReconcilePerconaServerMongoDBRestore) prepareStatefulSetsForPhysicalRes
 
 			cmd := []string{
 				"bash", "-c",
-				"install -D /usr/bin/pbm /opt/percona/pbm && install -D /usr/bin/pbm-agent-restore /opt/percona/pbm-agent-restore",
+				"install -D /usr/bin/pbm /opt/percona/pbm && install -D /usr/bin/pbm-agent /opt/percona/pbm-agent",
 			}
 			pbmInit := psmdb.EntrypointInitContainer(
 				cluster,
