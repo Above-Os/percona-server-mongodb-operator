@@ -2,6 +2,7 @@ package perconaservermongodbbackup
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -17,7 +18,7 @@ import (
 
 const (
 	// pbmStartingDeadline is timeout after which continuous starting state is considered as error
-	pbmStartingDeadline       = time.Duration(300) * time.Second
+	pbmStartingDeadline       = time.Duration(600) * time.Second
 	pbmStartingDeadlineErrMsg = "starting deadline exceeded"
 )
 
@@ -119,9 +120,13 @@ func (b *Backup) Start(ctx context.Context, k8sclient client.Client, cluster *ap
 
 // Status return backup status
 func (b *Backup) Status(ctx context.Context, cr *api.PerconaServerMongoDBBackup) (api.PerconaServerMongoDBBackupStatus, error) {
+	log := logf.FromContext(ctx)
 	status := cr.Status
 
 	meta, err := b.pbm.GetBackupMeta(cr.Status.PBMname)
+	mb, _ := json.Marshal(meta)
+	log.Info("[BACKUP] Status get meta", "meta", string(mb))
+
 	if err != nil && !errors.Is(err, pbm.ErrNotFound) {
 		return status, errors.Wrap(err, "get pbm backup meta")
 	}
